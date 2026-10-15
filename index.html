@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIBECITY — Платформа знакомств</title>
+    <style>
+        :root {
+            /* Cyberpunk neon pink atmospheric background matching user's image */
+            --bg-main: #230224;
+            --bg-card: rgba(58, 12, 54, 0.85);
+            --bg-card-hover: rgba(78, 18, 71, 0.95);
+            --accent-pink: #ff007f;
+            --text-main: #FFFFFF;
+            --text-secondary: #f5d6f0;
+            --glow-color: rgba(255, 0, 127, 0.65);
+            --border-color: rgba(255, 0, 127, 0.55);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            background-image: 
+                radial-gradient(circle at 50% 15%, rgba(190, 15, 110, 0.65) 0%, transparent 60%),
+                radial-gradient(circle at 20% 85%, rgba(140, 10, 90, 0.55) 0%, transparent 60%),
+                linear-gradient(180deg, #320536 0%, #17011d 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(12px);
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                        visibility 0.35s;
+        }
+
+        .screen.active {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .brand-logo {
+            width: 75px !important;
+            height: 75px !important;
+            max-width: 75px !important;
+            max-height: 75px !important;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 16px auto;
+            filter: drop-shadow(0 0 16px rgba(255, 0, 127, 0.9));
+        }
+
+        .header-logo {
+            width: 110px !important;
+            height: 40px !important;
+            max-width: 110px !important;
+            max-height: 40px !important;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 127, 0.7));
+        }
+
+        .logo-text {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 0 18px rgba(255, 0, 127, 0.9);
+        }
+
+        .logo-text .vibe {
+            color: #FFFFFF;
+        }
+
+        .logo-text .city {
+            color: var(--accent-pink);
+        }
+
+        .btn-neon-glow {
+            position: relative;
+            background: linear-gradient(180deg, #b5157c 0%, #4a0539 50%, #8f0c62 100%);
+            border: 2px solid var(--accent-pink);
+            color: var(--text-main);
+            padding: 15px 22px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 45px rgba(255, 0, 127, 0.75), inset 0 0 15px rgba(255, 0, 127, 0.5);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            max-width: 440px;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin: 15px auto;
+        }
+
+        .btn-neon-glow:active {
+            transform: scale(0.98);
+        }
+
+        .btn-neon-glow::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 15px;
+            right: 15px;
+            height: 45%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.01) 100%);
+            border-radius: 30px 30px 10px 10px;
+            pointer-events: none;
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-grow: 1;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .btn-icon-left {
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px !important;
+            max-width: 22px !important;
+            max-height: 22px !important;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px var(--accent-pink));
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        .btn-circle-arrow {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+            max-height: 32px !important;
+            background: rgba(255, 0, 127, 0.38);
+            border: 2px solid var(--accent-pink);
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.9);
+            flex-shrink: 0 !important;
+        }
+
+        .btn-circle-arrow svg {
+            width: 15px !important;
+            height: 15px !important;
+            min-width: 15px !important;
+            max-width: 15px !important;
+            max-height: 15px !important;
+            fill: #ffffff !important;
+            display: block !important;
+        }
+
+        .btn-outline {
+            background: rgba(65, 12, 54, 0.85);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 0, 127, 0.55);
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 440px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:active {
+            transform: scale(0.98);
+        }
+
+        #screen-age .age-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px 20px;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 60px var(--glow-color);
+            margin: auto;
+        }
+
+        #screen-age h1.age-badge {
+            font-size: 36px;
+            color: var(--accent-pink);
+            font-weight: 900;
+            margin-bottom: 4px;
+            text-shadow: 0 0 22px var(--glow-color);
+        }
+
+        #screen-age h2 {
+            font-size: 13px;
+            margin-bottom: 10px;
+            letter-spacing: 1.2px;
+            color: #fff;
+        }
+
+        #screen-age p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        #screen-age .age-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1050px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            padding-bottom: 40px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 0, 127, 0.35);
+            margin-bottom: 5px;
+        }
+
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero-content h1 {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+        }
+
+        .hero-content p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .main-banner-img {
+            width: 100%;
+            max-width: 440px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 50px var(--glow-color);
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 10px auto;
+        }
+
+        /* Увеличенный баннер для 3 страницы */
+        .main-banner-large {
+            width: 100%;
+            max-width: 480px;
+            border-radius: 24px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 70px var(--glow-color);
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 15px auto;
+            transform: scale(1.03);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .feature-card {
+            background-color: var(--bg-card);
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid rgba(255, 0, 127, 0.35);
+            box-shadow: 0 0 35px rgba(255, 0, 127, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            padding: 1.5px;
+            background: linear-gradient(135deg, rgba(255,0,127,0.95), rgba(255,0,127,0.2), rgba(255,0,127,0.7));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .feature-card h3 {
+            font-size: 17px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .profile-container {
+            max-width: 440px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding-bottom: 40px;
+        }
+
+        .back-btn-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+            font-size: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+            transition: background 0.2s;
+        }
+
+        .back-btn-circle:active {
+            background: var(--bg-card-hover);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--accent-pink);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 0 14px rgba(255, 0, 127, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Экран 18+ -->
+    <div id="screen-age" class="screen">
+        <div class="age-card">
+            <img class="brand-logo" src="https://i.postimg.cc/CLGhrQZQ/20261013-005256-removebg-preview.png" alt="Vibecity Logo" onerror="this.style.display='none';">
+            <h1 class="age-badge">18+</h1>
+            <h2>ВХОД ТОЛЬКО ДЛЯ СОВЕРШЕННОЛЕТНИХ</h2>
+            <p>Сайт предназначен исключительно для пользователей старше 18 лет. Продолжая, вы подтверждаете своё совершеннолетие и согласие с правилами использования платформы.</p>
+            <div class="age-actions">
+                <button class="btn-neon-glow" onclick="verifyAge(true)">
+                    <img class="btn-icon-left" src="https://i.postimg.cc/yxmcQTC1/740842.png" alt="icon" onerror="this.style.display='none';">
+                    <span class="btn-content">МНЕ ЕСТЬ 18 ЛЕТ</span>
+                    <div class="btn-circle-arrow"><svg viewBox="0 0 24 24"><path d="M5 13h11.586l-5.293 5.293a1 1 0 0 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414l-7-7a1 1 0 1 0-1.414 1.414L16.586 11H5a1 1 0 0 0 0 2z"/></svg></div>
+                </button>
+                <button class="btn-outline" onclick="verifyAge(false)">МНЕ НЕТ 18 ЛЕТ — ВЫЙТИ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран отказа -->
+    <div id="screen-denied" class="screen">
+        <div style="text-align: center; max-width: 400px; margin: auto;">
+            <img class="brand-logo" src="https://i.postimg.cc/CLGhrQZQ/20261013-005256-removebg-preview.png" alt="Vibecity Logo" onerror="this.style.display='none';">
+            <h2 style="font-size: 22px; margin-bottom: 10px;">Доступ ограничен</h2>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Доступ к сайту разрешен только лицам, достигшим 18 лет.</p>
+            <button class="btn-outline" onclick="navigateTo('/')">Вернуться назад</button>
+        </div>
+    </div>
+
+    <!-- Главная страница (Страница 1) -->
+    <div id="screen-home" class="screen active">
+        <div class="container">
+            <header>
+                <img class="header-logo" src="https://i.postimg.cc/CLGhrQZQ/20261013-005256-removebg-preview.png" alt="Vibecity Logo" onerror="this.style.display='none';">
+                <button class="btn-outline" style="padding: 9px 18px; font-size: 13px; max-width: 130px; border-radius: 20px;" onclick="handleStartDating()">Войти</button>
+            </header>
+
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h1>ЗНАКОМСТВА БЕЗ ГРАНИЦ</h1>
+                    <p>Открывай новые знакомства, выбирай девушку на свой вкус, которая точно обрадует тебя этой ночью.</p>
+                    <button class="btn-neon-glow" onclick="handleStartDating()">
+                        <span class="btn-content">НАЧАТЬ ЗНАКОМСТВА</span>
+                        <div class="btn-circle-arrow"><svg viewBox="0 0 24 24"><path d="M5 13h11.586l-5.293 5.293a1 1 0 0 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414l-7-7a1 1 0 1 0-1.414 1.414L16.586 11H5a1 1 0 0 0 0 2z"/></svg></div>
+                    </button>
+                </div>
+            </section>
+
+            <section>
+                <h2 style="font-size: 24px; margin-bottom: 20px; font-weight: 700; text-align: center;">ЗНАКОМЬСЯ ТАК, КАК ТЕБЕ УДОБНО</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Создавай анкеты</h3>
+                        <p>Настраивай свой профиль и привлекай внимание.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Личные сообщения</h3>
+                        <p>Безопасный и быстрый чат для общения.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Лучший выбор</h3>
+                        <p>Создавай новые знакомства в своей жизни, ищи девушку которая тебя обрадует этой ночью)</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Страница 2 -->
+    <div id="screen-profile" class="screen">
+        <div class="profile-container">
+            <div style="width: 100%; display: flex; align-items: center; margin-bottom: 5px;">
+                <button class="back-btn-circle" onclick="navigateTo('/')">‹</button>
+            </div>
+            
+            <img class="main-banner-img" src="https://i.postimg.cc/jSC40cPN/20261013-140315-removebg-preview.png" alt="Banner" onerror="this.style.display='none';">
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 5px;">
+                <div class="feature-card">
+                    <h3>Создавай новые знакомства в своей жизни</h3>
+                    <p>Ищи девушку которая тебя обрадует этой ночью)</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Быстрый поиск</h3>
+                    <p>Находи подходящие варианты в своем городе за считанные секунды.</p>
+                </div>
+            </div>
+
+            <button class="btn-neon-glow" onclick="navigateTo('/third')">
+                <span class="btn-content">ДАЛЕЕ</span>
+                <div class="btn-circle-arrow"><svg viewBox="0 0 24 24"><path d="M5 13h11.586l-5.293 5.293a1 1 0 0 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414l-7-7a1 1 0 1 0-1.414 1.414L16.586 11H5a1 1 0 0 0 0 2z"/></svg></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Страница 3 (Увеличенный баннер) -->
+    <div id="screen-third" class="screen">
+        <div class="profile-container">
+            <div style="width: 100%; display: flex; align-items: center; margin-bottom: 5px;">
+                <button class="back-btn-circle" onclick="navigateTo('/profile')">‹</button>
+            </div>
+
+            <img class="main-banner-large" src="https://i.postimg.cc/bvhwVXrx/20261014-013857-removebg-preview.png" alt="City Banner" onerror="this.style.display='none';">
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 5px;">
+                <div class="feature-card">
+                    <h3>Выбирай свой город за считанные секунды</h3>
+                    <p>Находи интересных людей и приятные знакомства прямо в вашем районе или городе.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Безопасно и конфиденциально</h3>
+                    <p>Ваши данные защищены, а общение происходит в защищенном чате.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Реальные встречи</h3>
+                    <p>Только проверенные анкеты и реальные фотографии пользователей.</p>
+                </div>
+            </div>
+
+            <button class="btn-neon-glow" onclick="navigateTo('/fourth')">
+                <span class="btn-content">ДАЛЕЕ</span>
+                <div class="btn-circle-arrow"><svg viewBox="0 0 24 24"><path d="M5 13h11.586l-5.293 5.293a1 1 0 0 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414l-7-7a1 1 0 1 0-1.414 1.414L16.586 11H5a1 1 0 0 0 0 2z"/></svg></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Страница 4 (Скачивание APK) -->
+    <div id="screen-fourth" class="screen">
+        <div class="profile-container">
+            <div style="width: 100%; display: flex; align-items: center; margin-bottom: 5px;">
+                <button class="back-btn-circle" onclick="navigateTo('/third')">‹</button>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 5px;">
+                <div class="logo-text">
+                    <span class="vibe" style="color: #ffffff;">VIBE</span><span class="city" style="color: var(--accent-pink);">CITY</span>
+                </div>
+                <h2 style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px;">Как скачать наше приложение?</h2>
+                <p style="color: var(--text-secondary); font-size: 13px;">Инструкция по установке приложения на ваше устройство</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 15px;">
+                <div class="feature-card">
+                    <div class="step-number">ШАГ 1</div>
+                    <h3>Скачайте файл</h3>
+                    <p>Нажмите на кнопку загрузки ниже, чтобы сохранить официальный установочный файл приложения на свой телефон.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="step-number">ШАГ 2</div>
+                    <h3>Разрешите установку</h3>
+                    <p>Если система безопасности попросит разрешение, зайдите в настройки и разрешите установку приложений из неизвестных источников.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="step-number">ШАГ 3</div>
+                    <h3>Установите и откройте</h3>
+                    <p>Запустите скачанный файл, дождитесь завершения установки и наслаждайтесь знакомствами в VIBECITY!</p>
+                </div>
+            </div>
+
+            <!-- Замените 'app-release.apk' на вашу прямую ссылку, если файл в облаке -->
+            <a href="VibeCity.apk" class="btn-neon-glow" download>
+                <span class="btn-content">СКАЧАТЬ ФАЙЛ</span>
+                <div class="btn-circle-arrow"><svg viewBox="0 0 24 24"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg></div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const screens = {
+            '/': 'screen-home',
+            '/age': 'screen-age',
+            '/profile': 'screen-profile',
+            '/third': 'screen-third',
+            '/fourth': 'screen-fourth',
+            '/denied': 'screen-denied'
+        };
+
+        function navigateTo(path, pushHistory = true) {
+            Object.values(screens).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+
+            const targetScreenId = screens[path] || screens['/'];
+            const targetEl = document.getElementById(targetScreenId);
+            if (targetEl) {
+                targetEl.classList.add('active');
+            }
+
+            if (pushHistory && window.history && window.history.pushState) {
+                try {
+                    history.pushState({ path }, '', path);
+                } catch(e) {}
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function handleStartDating() {
+            const isVerified = localStorage.getItem('vibecity_age_verified') === 'true';
+            const verifiedTime = localStorage.getItem('vibecity_age_time');
+            const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+            let ageValid = isVerified && verifiedTime && (Date.now() - parseInt(verifiedTime) < thirtyDaysMs);
+
+            if (ageValid) {
+                navigateTo('/profile');
+            } else {
+                navigateTo('/age');
+            }
+        }
+
+        function verifyAge(accepted) {
+            if (accepted) {
+                localStorage.setItem('vibecity_age_verified', 'true');
+                localStorage.setItem('vibecity_age_time', Date.now().toString());
+                navigateTo('/profile');
+            } else {
+                localStorage.removeItem('vibecity_age_verified');
+                localStorage.removeItem('vibecity_age_time');
+                navigateTo('/denied');
+            }
+        }
+
+        window.addEventListener('popstate', (event) => {
+            const path = event.state && event.state.path ? event.state.path : '/';
+            navigateTo(path, false);
+        });
+    </script>
+</body>
+</html>
